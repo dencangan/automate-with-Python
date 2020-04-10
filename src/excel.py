@@ -49,11 +49,10 @@ def read_excel(path_to_workbook, sheet=None):
         if sheet is not None:
             print(f"Reading sheet '{sheet}' from {path_to_workbook}")
             df_excel_sheet = pd.read_excel(path_to_workbook, sheet_name=sheet)
-            return df_excel_sheet
 
         else:
             print(f"Reading whole workbook...")
-            df_excel_dict = pd.read_excel(path_to_workbook, sheet_name=None)
+            df_excel_sheet = pd.read_excel(path_to_workbook, sheet_name=None)
+            print(f"List of sheet names stored as key in dict: {df_excel_sheet.keys()}")
 
-            print(f"List of sheet names stored as key in dict: {df_excel_dict.keys()}")
-            return df_excel_dict
+        return df_excel_sheet

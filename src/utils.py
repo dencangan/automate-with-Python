@@ -61,7 +61,6 @@ class EmailObject(object):
         else:
             raise TypeError("email_image must be a path str or list of path strings")
 
-
         if add_css is True:
             # Default standard css (used from a27)
             css = '<style>p {font:13px arial; margin-bottom:4px}\

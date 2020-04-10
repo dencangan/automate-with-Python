@@ -5,49 +5,59 @@ Decorators are wrappers to modify the behaviour of functions and classes. To cal
 from time import time
 import sys
 import warnings
+import functools
 
 
-def timer(method):
-    """Measure time taken in seconds to run"""
+def timer(_func=None, *, print_msg=None):
+    """ Allows one to specify print_msg if need be. Useful for timing builtin methods"""
+    def decorator_timer(func):
+        @functools.wraps(func)
+        def wrapper_timer(*args, **kwargs):
+            time_start = time()
+            result = func(*args, **kwargs)
+            time_end = time()
 
-    def timed(*args, **kwargs):
-        time_start = time()
-        result = method(*args, **kwargs)
-        time_end = time()
-        print(f"{method.__name__} took {(time_end - time_start):2.2f} seconds.")
-        return result
+            print(f"{func.__name__ if print_msg is None else print_msg} took {(time_end - time_start):2.2f} seconds.")
+            return result
+        return wrapper_timer
 
-    return timed
+    if _func is None:
+        return decorator_timer
+    else:
+        return decorator_timer(_func)
 
 
-def deprecated(name):
-    """This is a decorator which can be used to mark functions as deprecated. It will result in a warning being emitted
-    when the function is used.
+def deprecated(_func=None, *, print_msg=None):
+    """
+    This is a decorator which can be used to mark functions as deprecated.
+    It will result in a warning being emitted when the function is used.
 
     Parameter
     ---------
-        name : str
-            To guide user to the latest version
+        print_msg : str
+            Information to point user to newest version.
     """
 
-    def wrapper(func):
+    def decorator_deprecated(func):
 
-        def new_func(*args, **kwargs):
+        @functools.wraps(func)
+        def wrapper_decorator(*args, **kwargs):
             with warnings.catch_warnings():
-                warnings.simplefilter("always", category=DeprecationWarning)
-                warnings.warn(f"\n***{func.__name__}: This function/class is deprecated. "
-                              f"Please refer to new version: {name}***",
-                              category=DeprecationWarning)
-
+                if print_msg is None:
+                    warnings.warn(f"\nFunction deprecated: {func.__name__}",
+                                  category=DeprecationWarning, stacklevel=2)
+                else:
+                    warnings.warn(f"\nFunction deprecated: {func.__name__}"
+                                  f"\n{print_msg}",
+                                  category=DeprecationWarning, stacklevel=2)
             return func(*args, **kwargs)
 
-        new_func.__name__ = func.__name__
-        new_func.__doc__ = func.__doc__
-        new_func.__dict__.update(func.__dict__)
+        return wrapper_decorator
 
-        return new_func
-
-    return wrapper
+    if _func is None:
+        return decorator_deprecated
+    else:
+        return decorator_deprecated(_func)
 
 
 # TODO Incomplete
