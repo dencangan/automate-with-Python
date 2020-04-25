@@ -12,12 +12,12 @@ def run_excel_macros(path_to_workbook, close_workbook=False, *macros):
 
     Parameter
     ---------
-        path_to_workbook : str
-            Excel file path.
-        close_workbook : bool
-            Toggle closing the workbook once macros have run.
-        macros : str
-            Naming convention should look something like "module1.macro1", module followed by name of macro.
+    path_to_workbook : str
+        Excel file path.
+    close_workbook : bool
+        Toggle closing the workbook once macros have run.
+    macros : str, args
+        Naming convention should look something like "module1.macro1", module followed by name of macro.
 
     """
 
@@ -40,6 +40,7 @@ def run_excel_macros(path_to_workbook, close_workbook=False, *macros):
 
 
 def read_excel(path_to_workbook, sheet=None):
+    """Read excel files with multiple sheets"""
 
     if path_to_workbook.endswith(".csv"):
         df_csv = pd.read_csv(path_to_workbook)

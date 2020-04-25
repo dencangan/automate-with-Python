@@ -4,6 +4,7 @@ File handling type functions.
 import os
 import shutil
 import zipfile
+import re
 
 
 def arrange_files(main_dir, misc_folder_name="others"):

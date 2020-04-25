@@ -3,20 +3,135 @@ Generic utils for emails, parsing, etc.
 """
 
 import json, csv
+import zipfile, io
 import os
 import glob
 import pandas as pd
 import numpy as np
 import smtplib
 import string
+from datetime import datetime
 from os.path import basename
 import re
+import unittest
 from email import encoders
 from email.mime.base import MIMEBase
 from email.mime.image import MIMEImage
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from src import get_config_path
+
+
+def read_double_zip(zip_dir, zip_file_one, file_name):
+    """To read files in zip file within zip file."""
+    zip_read_one = zipfile.ZipFile(zip_dir, 'r')
+    file_data = io.BytesIO(zip_read_one.read(zip_file_one))
+    zip_read_two = zipfile.ZipFile(file_data)
+    zip_o = zip_read_two.open(file_name)
+    df = pd.read_csv(zip_o, delimiter="\t")
+    return df
+
+
+def run_test(test_subpackage, test_filename):
+    # Parent directory (src)
+    _ROOT = os.path.abspath(os.path.dirname(__file__))
+    loader = unittest.TestLoader()
+    testPath = os.path.join(_ROOT, test_subpackage)
+    suite = loader.discover(testPath, pattern=test_filename)
+    runner = unittest.TextTestRunner()
+    runner.run(suite)
+
+
+def read_json_config(cfg_file):
+    """Function to quickly read json from config directory"""
+    # Read config
+    config_path = get_config_path(cfg_file)
+    cfg = open(config_path)
+    return json.load(cfg)
+
+
+def get_latest_modified_file(folder_dir, file_type=''):
+
+    """
+    Parameters
+    ----------
+        folder_dir: str
+            Folder directory
+        file_type
+            Specify file format if needed, defaults to empty string.
+            Examples of acceptable types: .csv, .xlsx, etc.
+
+    Returns
+    -------
+        latest_file: str
+            Gets name of latest file in directory
+    """
+
+    list_of_files = glob.glob(folder_dir + '/*' + file_type)
+    latest_file = max(list_of_files, key=os.path.getctime)
+    return latest_file
+
+
+def csv_to_json(csv_crypto_dir, json_crypto_dir):
+    """Converts csv to json files for mongoDB storage
+
+    """
+
+    data = {}
+    with open(csv_crypto_dir) as csv_file:
+        csv_reader = csv.DictReader(csv_file)
+        for rows in csv_reader:
+            date = rows['Date']
+            data[date] = rows
+
+    with open(json_crypto_dir, 'w') as json_file:
+        json_file.write(json.dumps(data, indent=4))
+
+
+def last_business_date(holidays, date=None):
+    """
+    Input date and retrieves last business date. Takes holidays and weekends into account using holiday list as input.
+
+    Parameter
+    ----------
+    holidays : lst
+        List of holiday dates in np.datetime64
+    date : str, default datetime today
+        Date input should be YYYY-MM-DD
+
+    Returns
+    -------
+    np.datetime64 of last business date
+
+    Example
+    -------
+    >>> last_business_date("2019-12-25") # should return "2019-12-24" (Christmas Day)
+    >>> last_business_date("2019-04-22") # should return "2019-04-18" (Monday after Good Friday, Thursday)
+    >>> last_business_date("2019-10-19") # should return "2019-10-18" (Saturday returns Friday)
+    >>> last_business_date("2019-10-20") # should return "2019-10-18" (Sunday returns Friday)
+    >>> last_business_date("2019-10-14") # should return "2019-10-11" (Monday returns Friday)
+    """
+
+    if date is None:
+        current_date = np.datetime64(datetime.today(), 'D')
+
+    else:
+        current_date = np.datetime64(date)
+
+    # If found in holiday params, offset set to 0
+    if current_date in holidays:
+        offsets = 0
+
+    # If not found in holiday params, offset set to -1 to get last business day
+    else:
+        if pd.to_datetime(current_date).weekday() == 5 or pd.to_datetime(current_date).weekday() == 6:
+            offsets = 0
+
+        else:
+            offsets = -1
+
+    return np.busday_offset(current_date, offsets=offsets, roll='preceding',
+                            holidays=holidays)
 
 
 class EmailObject(object):
@@ -205,50 +320,3 @@ class EmailObject(object):
     @staticmethod
     def strip_html_tags(x):
         return re.sub("<[^<]+?>", "", x)
-
-
-def read_json_config(cfg_file):
-    """Function to quickly read json from config directory"""
-    # Read config
-    config_path = get_config_path(cfg_file)
-    cfg = open(config_path)
-    return json.load(cfg)
-
-
-def get_latest_modified_file(folder_dir, file_type=''):
-
-    """
-    Parameters
-    ----------
-        folder_dir: str
-            Folder directory
-        file_type
-            Specify file format if needed, defaults to empty string.
-            Examples of acceptable types: .csv, .xlsx, etc.
-
-    Returns
-    -------
-        latest_file: str
-            Gets name of latest file in directory
-    """
-
-    list_of_files = glob.glob(folder_dir + '/*' + file_type)
-    latest_file = max(list_of_files, key=os.path.getctime)
-    return latest_file
-
-
-def csv_to_json(csv_crypto_dir, json_crypto_dir):
-    """Converts csv to json files for mongoDB storage
-
-    """
-
-    data = {}
-    with open(csv_crypto_dir) as csv_file:
-        csv_reader = csv.DictReader(csv_file)
-        for rows in csv_reader:
-            date = rows['Date']
-            data[date] = rows
-
-    with open(json_crypto_dir, 'w') as json_file:
-        json_file.write(json.dumps(data, indent=4))
-
