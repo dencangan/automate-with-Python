@@ -50,8 +50,65 @@ def read_json_config(cfg_file):
     return json.load(cfg)
 
 
-def get_latest_modified_file(folder_dir, file_type=''):
+def print_dict_json(d, json_format=True, indent_num=1, add_comma=False, indent="\t"):
+    """
+    A function to print a dictionary with indents, with json format option.
 
+    Parameters
+    ----------
+    d : dict
+        Input dictionary to print
+    json_format : bool, default True
+        Should quotes be put around keys?
+    indent_num : int
+        Number of indents to make for first layer
+    add_comma : bool, default False
+        Add comment after nested dicts (used in recursive call)
+    indent : str
+        Default "\t", how should indents be made. Alternative could "    "
+
+    Example
+    -------
+    >>> d = {"a": {"b": {"c": 1, "d": 2}, "c": [6, 7]}, "b": {"c": 3}, "d": 4}
+    >>> print(d)
+    >>> print_dict_json(d)
+
+    Notes
+    -----
+    Alternative option is to use the json package: ie.
+    >>> import json
+    >>> d = {"key": ["val_one", "val_two"]}
+    >>> print(json.dumps(d, indent=4, sort_keys=True))
+
+    """
+    print(f"{indent * (indent_num - 1)}" + "{")
+    # Enumerate over items, to know of on last element
+    for j, kk in enumerate(d.items()):
+        k, v = kk
+        comma = ","
+        # put quotes around key element if json format
+        if json_format:
+            k = f"'{k}'"
+        # add a comma to the end of each line, unless on the last entry
+        comma = "" if j == (len(d) - 1) else comma
+        # if value is a dict, recursively call self, increase the tab number
+        if isinstance(v, dict):
+            print(f"{indent * indent_num}{k}:")
+            print_dict_json(v, json_format, indent_num + 1, j != (len(d) - 1), indent)
+        # otherwise print values
+        else:
+            # if s string, put quotes around it
+            if isinstance(v, str):
+                print(f"{indent * indent_num}{k}: '{v}'{comma}")
+            # otherwise price as is
+            else:
+                print(f"{indent * indent_num}{k}: {v}{comma}")
+    # add_comma should be False if on last element in a recursive call
+    com = "," if add_comma and json_format else ""
+    print(f"{indent * (indent_num - 1)}" + "}" + f"{com}")
+
+
+def get_latest_modified_file(folder_dir, file_type=''):
     """
     Parameters
     ----------
@@ -73,9 +130,7 @@ def get_latest_modified_file(folder_dir, file_type=''):
 
 
 def csv_to_json(csv_crypto_dir, json_crypto_dir):
-    """Converts csv to json files for mongoDB storage
-
-    """
+    """Converts csv to json files for mongoDB storage"""
 
     data = {}
     with open(csv_crypto_dir) as csv_file:
