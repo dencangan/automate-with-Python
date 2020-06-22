@@ -161,16 +161,16 @@ def db_arctic_library(library=None):
 # ------------------------
 # Arctic helper functions
 # ------------------------
-def db_arctic_initalise(lib_name, lib_type):
+def db_arctic_initialise(lib_name: str, lib_type: str):
     """
     To initialise new arctic library.
 
     Parameters
     ----------
-        lib_name : str
-            Name of the new library to create.
-        lib_type : str
-            Acceptable types ["VERSION_STORE", "CHUNK_STORE", "TICK_STORE"]
+    lib_name
+        Name of the new library to create.
+    lib_type
+        Acceptable types ["VERSION_STORE", "CHUNK_STORE", "TICK_STORE"]
 
     """
     arctic_stores = [VERSION_STORE, CHUNK_STORE, TICK_STORE]
@@ -182,6 +182,9 @@ def db_arctic_initalise(lib_name, lib_type):
     lib = db_connect(is_arctic=True, lib_name=None)
 
     lib.initialize_library(lib_name, lib_type=lib_type)
+
+    # This is important because arctic will not show the existing libraries upon creation of a new library.
+    Arctic.reload_cache(lib)
 
 
 def db_arctic_write(df, symbol, lib_name=None):
@@ -227,49 +230,48 @@ def db_arctic_append(df, symbol, lib_name=None):
 # --------------------
 # Non_arctic functions
 # --------------------
-def db_non_arctic_library(lib_name=None):
+def db_non_arctic_library(lib_name: str = None):
     """
     Return pymongo collection or list of collection names in non_arctic database.
 
-    Parameter
-    ---------
-        lib_name : str, None
-            If None, returns list of available collection names
+    Parameters
+    ----------
+    lib_name
+        If None, returns list of available collection names
 
     Returns
     --------
-        pymongo collection
-
+    Collection
     """
-    collection = db_connect(is_arctic=False, lib_name=lib_name)
+    cl = db_connect(is_arctic=False, lib_name=lib_name)
 
     if lib_name is None:
-        return collection.list_collection_names()
+        return cl.list_collection_names()
     else:
-        return collection
+        return cl
 
 
-def db_non_arctic_read(lib_name, no_id=True):
+def db_non_arctic_read(lib_name: str, no_id: bool = True) -> pd.DataFrame:
     """
     Reading of non arctic data.
 
     Parameters
     ----------
-        lib_name : pymongo collection
-            Only acceptable type.
-        no_id : bool
-            Specify if mongodb _id to be included in pd.dataframe
+    lib_name
+        Only acceptable type.
+    no_id : bool
+        Specify if mongodb _id to be included in pd.dataframe
 
     Returns
     -------
-        pd.DataFrame
+    pd.DataFrame
 
     """
 
-    collection = db_connect(is_arctic=False, lib_name=lib_name)
+    cl = db_connect(is_arctic=False, lib_name=lib_name)
 
     # Make a query to the specific DB and Collection
-    cursor = collection.find()
+    cursor = cl.find()
 
     # Expand the cursor and construct the DataFrame
     df = pd.DataFrame(list(cursor))
@@ -279,4 +281,5 @@ def db_non_arctic_read(lib_name, no_id=True):
         del df['_id']
 
         return df
+
 

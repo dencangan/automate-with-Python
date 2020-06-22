@@ -2,8 +2,10 @@
 Generic utils for emails, parsing, etc.
 """
 
-import json, csv
-import zipfile, io
+import json
+import csv
+import zipfile
+import io
 import os
 import glob
 import pandas as pd
@@ -36,8 +38,8 @@ def run_test(test_subpackage, test_filename):
     # Parent directory (src)
     _ROOT = os.path.abspath(os.path.dirname(__file__))
     loader = unittest.TestLoader()
-    testPath = os.path.join(_ROOT, test_subpackage)
-    suite = loader.discover(testPath, pattern=test_filename)
+    test_pth = os.path.join(_ROOT, test_subpackage)
+    suite = loader.discover(test_pth, pattern=test_filename)
     runner = unittest.TextTestRunner()
     runner.run(suite)
 
@@ -143,13 +145,13 @@ def csv_to_json(csv_crypto_dir, json_crypto_dir):
         json_file.write(json.dumps(data, indent=4))
 
 
-def last_business_date(holidays, date=None):
+def last_business_date(holidays=None, date=None):
     """
     Input date and retrieves last business date. Takes holidays and weekends into account using holiday list as input.
 
     Parameter
     ----------
-    holidays : lst
+    holidays : list
         List of holiday dates in np.datetime64
     date : str, default datetime today
         Date input should be YYYY-MM-DD
@@ -166,6 +168,9 @@ def last_business_date(holidays, date=None):
     >>> last_business_date("2019-10-20") # should return "2019-10-18" (Sunday returns Friday)
     >>> last_business_date("2019-10-14") # should return "2019-10-11" (Monday returns Friday)
     """
+
+    if holidays is None:
+        raise AssertionError("Please input list of holidays.")
 
     if date is None:
         current_date = np.datetime64(datetime.today(), 'D')
@@ -187,6 +192,37 @@ def last_business_date(holidays, date=None):
 
     return np.busday_offset(current_date, offsets=offsets, roll='preceding',
                             holidays=holidays)
+
+
+def look_back_dates(num, holidays, start_date=datetime.today().strftime('%Y-%m-%d')):
+    """
+    Look back dates, accounting for holidays and weekends.
+
+    Parameters
+    ----------
+    num : int
+        Input number of look back days
+    holidays : list
+        List of holiday dates in np.datetime64
+    start_date : str
+        Input date format YYYY-MM-DD, defaults to today's date
+
+    Returns
+    -------
+    List of numpy.datetime64 dates
+
+    Example
+    -------
+    >>> look_back_dates(num=5)
+    """
+
+    look_back_lst = []
+    x = 0
+    while x < num:
+        start_date = last_business_date(date=start_date, holidays=holidays)
+        x += 1
+        look_back_lst.append(start_date)
+    return look_back_lst
 
 
 class EmailObject(object):
@@ -375,3 +411,20 @@ class EmailObject(object):
     @staticmethod
     def strip_html_tags(x):
         return re.sub("<[^<]+?>", "", x)
+
+
+def count_lines(dir):
+    """Return the amount of lines of .py"""
+    def item_line_count(pth):
+        if os.path.isdir(pth):
+            return dir_line_count(pth)
+        elif os.path.isfile(pth) and pth.endswith(".py"):
+            print(pth)
+            return len(open(pth, "rb").readlines())
+        else:
+            return 0
+
+    def dir_line_count(dir):
+        return sum(map(lambda item: item_line_count(os.path.join(dir, item)), os.listdir(dir)))
+
+    return dir_line_count(dir)

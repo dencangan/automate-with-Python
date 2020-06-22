@@ -5,6 +5,7 @@ import os
 import shutil
 import zipfile
 import re
+from datetime import datetime
 
 
 def arrange_files(main_dir, misc_folder_name="others"):
@@ -74,6 +75,11 @@ def check_file_exists(files):
 
     else:
         assert os.path.exists(files), f"{files} not found"
+
+
+def check_last_modified(files):
+    for s in files:
+        print(f"{s} last modified at {datetime.utcfromtimestamp(int(os.path.getmtime(s))).strftime('%Y%m%d, %H:%S.')}")
 
 
 def copy_file(src, des, src_name=None, des_name=None):

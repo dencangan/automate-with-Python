@@ -60,19 +60,3 @@ def deprecated(_func=None, *, print_msg=None):
         return decorator_deprecated(_func)
 
 
-# TODO Incomplete
-def exception(method):
-    """Logs exceptions should any occur during a function's run."""
-
-    def catch(*args, **kwargs):
-
-        try:
-            method(*args, **kwargs)
-            print("Clear of exceptions!")
-
-        except Exception as e:
-            exc_type, exc_obj, exc_tb = sys.exc_info()
-            print(f"{exc_type} found in {method.__name__} at line {exc_tb.tb_lineno}.\n{e}")
-
-    return catch
-
