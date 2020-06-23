@@ -16,20 +16,25 @@ def get_env_values(env_key=None):
 
 
 def append_sys_path(path="../"):
-    """Function to append package directory to sys path - so a module can be from the command line.
+    """
+    Function to append package directory to sys path - so a module can be from the command line.
 
-    Arg:
-        path (str): Directory path to append sys path to. Can use path hierarchy delimiting characters.
+    Parameters
+    ----------
+    path : str
+        Directory path to append sys path to. Can use path hierarchy delimiting characters.
         Defaults to "../" (go up one level).
 
-    Returns:
-        Print statement of appended path.
+    Returns
+    -------
+    Print statement of appended path.
 
-    Notes:
-        Same level: ./
-        Go up 1 level: ../ - Defaults to this
-        Go up 2 levels: ../..
-        Go up 3 levels: ../../..
+    Notes
+    -----
+    Same level: ./
+    Go up 1 level: ../ - Defaults to this
+    Go up 2 levels: ../..
+    Go up 3 levels: ../../..
     """
 
     try:

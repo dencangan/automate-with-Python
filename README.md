@@ -7,7 +7,6 @@ Functions/methods used frequently when automating tasks with Python. This generi
 - Excel and data frame functions
 - MongoDB set up with Arctic extension
 - Email automation
-- Test runner
 
 ## Prerequisites
 * Anaconda3

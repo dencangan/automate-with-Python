@@ -3,13 +3,19 @@ Decorators are wrappers to modify the behaviour of functions and classes. To cal
 """
 
 from time import time
-import sys
 import warnings
 import functools
 
 
 def timer(_func=None, *, print_msg=None):
-    """ Allows one to specify print_msg if need be. Useful for timing builtin methods"""
+    """
+    Allows one to specify print_msg if need be. Useful for timing builtin methods.
+
+    Parameter
+    ---------
+    print_msg : str
+        Information to point user to newest version.
+    """
     def decorator_timer(func):
         @functools.wraps(func)
         def wrapper_timer(*args, **kwargs):
@@ -34,8 +40,8 @@ def deprecated(_func=None, *, print_msg=None):
 
     Parameter
     ---------
-        print_msg : str
-            Information to point user to newest version.
+    print_msg : str
+        Information to point user to newest version.
     """
 
     def decorator_deprecated(func):
