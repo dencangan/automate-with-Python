@@ -9,10 +9,11 @@ from datetime import datetime
 
 
 def arrange_files(main_dir, misc_folder_name="others"):
-    """Arrange files accordingly to their extension type
+    """
+    Arrange files accordingly to their extension type
 
-    Parameter
-    --------
+    Parameters
+    ----------
     main_dir : str
         Folder to arrange files.
     misc_folder_name : str
@@ -60,7 +61,9 @@ def arrange_files(main_dir, misc_folder_name="others"):
 
 
 def read_zip(zip_file, file_name):
-    """Opens contents of zip file without extraction, can be read using pandas if dataframe like"""
+    """
+    Opens contents of zip file without extraction, can be read using pandas if dataframe like.
+    """
     zip_extraction = zipfile.ZipFile(zip_file, 'r')
     file = zip_extraction.open(file_name)
     return file
@@ -88,14 +91,14 @@ def copy_file(src, des, src_name=None, des_name=None):
 
     Parameters
     ----------
-        src : str
-            Source to file to copy
-        des : str
-            Destination to copy file to
-        src_name : str
-            Specify file name if needed (for loop runs)
-        des_name : str
-            New file name
+    src : str
+        Source to file to copy
+    des : str
+        Destination to copy file to
+    src_name : str
+        Specify file name if needed (for loop runs)
+    des_name : str
+        New file name
     """
     if src_name is not None:
         src = os.path.join(src, src_name)
