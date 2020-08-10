@@ -2,8 +2,76 @@
 
 import pandas as pd
 import numpy as np
-from re import escape
+import re
 import warnings
+import collections
+
+
+def df_to_ndarry(df, index, values, default_values=np.nan):
+    """
+    Converts pandas dataframe into N-dimensional arrays stored in a dictionary.
+    Column name as key for 'values' specified and 'dims' as key for 'index' specified.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        Dataframe to convert into array and store in dictionary.
+    index : list
+        Column(s) used to specify dimensions of nd-array.
+    values : list
+        Column(s) specifying elements to be stored in nd-array.
+    default_values : default, np.nan, values to nd-array before populating
+        NOTE: default values will be used to initialise output array, and thus affect the dtype
+        Be careful when using str for default values, the default value will determine the number of characters
+        that can be stored in a cell.
+
+    Returns
+    -------
+    Dictionary of nd-arrays.
+
+    Example
+    -------
+    >>> import pandas as pd
+    >>> df = pd.DataFrame({"date": ["2020-01-01", "2020-01-02", "2020-01-03"], "col_1": [1, 2, 3], "col_2": [4, 5, 6]})
+    >>> ndarry = df_to_ndarry(df, index=["date"], values=["col_1", "col_2"])
+    """
+    assert np.all(np.in1d(index, df.columns)), f"'index' specified: {index} not in column names: {df.columns}"
+    assert np.all(np.in1d(values, df.columns)), f"'values' specified: {values} not in column names: {df.columns}"
+
+    # Create a multi index to determine where to assign in nd-array
+    midx = pd.MultiIndex.from_arrays([df[i].values for i in index], names=index)
+
+    values, default_values = np.array(values), np.array(default_values)
+
+    # One default value, multiple values
+    if len(values) != len(default_values):
+        if (len(values) > 1) & (len(default_values) == 1):
+            default_values = np.repeat(default_values, len(values))
+
+    out = dict()
+    # get the shape of the nd-array
+    shape = [len(i) for i in midx.levels]
+
+    for i, v in enumerate(values):
+        # create array matching dimensions, filled with default value
+        tmp = np.full(shape, default_values[i])
+        # populate using the values and assign to label (location) in nd-array
+        tmp[tuple(midx.labels)] = df[v].values.flat
+        # store array results in output dictionary
+        if v == 'dims':
+            print("'dims' detected as key, renaming to '_dims'")
+            out['_dims'] = tmp
+        else:
+            out[v] = tmp
+
+    # Include name of dimensions
+    dim_names = collections.OrderedDict()
+    for i, n in enumerate(midx.names):
+        dim_names[n] = np.array(midx.levels[i])
+
+    out['dims'] = dim_names
+
+    return out
 
 
 def df_summary(df):
@@ -52,7 +120,7 @@ def concatenate_columns(sep="", *args, _add=True, na_fill=np.nan):
             out = df.astype(str).add(sep).sum(axis=1)
 
             if sep != "":
-                out = out.str.replace("%s+$" % escape(sep), "")  # removes trailing sep
+                out = out.str.replace("%s+$" % re.escape(sep), "")  # removes trailing sep
         else:
             df = df.astype(str)
             concat_str = (f'%s+"{sep}"+' * df.shape[1]) % tuple([f'df[{x}]' for x in list(df.columns)])

@@ -81,3 +81,14 @@ def look_back_dates(num, holidays, start_date=datetime.today().strftime('%Y-%m-%
         x += 1
         look_back_lst.append(start_date)
     return look_back_lst
+
+
+def excel_to_npdatetime(date):
+    """Excel date serial to numpy datetime"""
+    return np.array(["1899-12-30"], dtype="datetime64[D]") + date
+
+
+def datetime_to_excel(date):
+    """Datetime to excel date serial"""
+    delta = date.to_datetime() - datetime(1899, 12, 30)
+    return (delta.days.astype(float) + delta.seconds.astype(float) / 86400).astype(int)
