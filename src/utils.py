@@ -10,6 +10,7 @@ import os
 import glob
 import pandas as pd
 import numpy as np
+import datetime as dt
 import smtplib
 import string
 from os.path import basename
@@ -20,7 +21,7 @@ from email.mime.base import MIMEBase
 from email.mime.image import MIMEImage
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-from src import get_config_path
+from src import point_to_file
 
 
 def read_double_zip(zip_dir, zip_file_one, file_name):
@@ -43,10 +44,68 @@ def run_test(test_subpackage, test_filename):
     runner.run(suite)
 
 
+def convert_to_array(*args):
+    """
+    Converts to iterable numpy n dimensional array, supporting a wide range of data types.
+
+    Argument(s)
+    -----------
+    x : list, tuple, np.ndarray, pd.Series, np.datetime64, datetime.datetime
+
+    Yields
+    -------
+    Iterable np.ndarray.
+
+    Raises
+    ------
+    User warning if data type isn't specified in the function.
+
+    Example
+    -------
+    >>> import numpy as np
+    # Array conversion - multiple arguments
+    >>> x, y, z = convert_to_array(2, ["a","b"], None)
+    # Single argument
+    >>> date_array, = convert_to_array(np.datetime64("2019-01-01"))
+    # Lazy loading for single argument. Useful if the input is large.
+    >>> num = convert_to_array([1, 2, 3])
+    """
+
+    for x in args:
+        if isinstance(x, dt.date):
+            yield np.array([x.strftime("%Y-%m-%d")], dtype="datetime64[D]")
+        elif isinstance(x, np.ndarray):
+            yield x
+        elif isinstance(x, (list, tuple)):
+            yield np.array(x)
+        elif isinstance(x, (pd.Series, pd.core.indexes.base.Index, pd.core.series.Series)):
+            yield x.values
+        elif isinstance(x, (int, float, str, bool, np.bool_)):
+            yield np.array([x], dtype=type(x))
+        # np.int{#}
+        elif isinstance(x, (np.int8, np.int16, np.int32, np.int64)):
+            yield np.array([x], dtype=type(x))
+        # np.float{#}
+        elif isinstance(x, (np.float16, np.float32, np.float64)):
+            yield np.array([x], dtype=type(x))
+        # np.bool*
+        elif isinstance(x, (np.bool, np.bool_, np.bool8)):
+            yield np.array([x], dtype=type(x))
+        # np.datetime64
+        elif isinstance(x, np.datetime64):
+            yield np.array([x], "datetime64[D]")
+        elif x is None:
+            yield np.array([])
+        else:
+            from warnings import warn
+            warn(f"Data type {type(x)} is not configured in function.")
+            yield np.array([x], dtype=object)
+
+
 def read_json_config(cfg_file):
     """Function to quickly read json from config directory"""
     # Read config
-    config_path = get_config_path(cfg_file)
+    config_path = point_to_file(cfg_file)
     cfg = open(config_path)
     return json.load(cfg)
 
@@ -332,7 +391,7 @@ class EmailObject(object):
         return re.sub("<[^<]+?>", "", x)
 
 
-def count_lines(dir):
+def count_py_lines(dir):
     """Return the amount of lines of .py"""
     def item_line_count(pth):
         if os.path.isdir(pth):

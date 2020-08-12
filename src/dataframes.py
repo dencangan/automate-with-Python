@@ -5,9 +5,26 @@ import numpy as np
 import re
 import warnings
 import collections
+from src import point_to_file
 
 
-def df_to_ndarry(df, index, values, default_values=np.nan):
+def df_summary(df):
+    """
+    Returns summary of a dataframe.
+    >>> example = pd.read_csv(point_to_file("example_dataframe.csv"))
+    >>> df_summary(df=example)
+    """
+    x_axis, y_axis = df.shape
+    print(f"\n{'-'*18}\nDataframe Summary\n{'-'*18}"
+          f"\nNumber of rows: {x_axis}"
+          f"\nNumber of columns: {y_axis}"
+          f"\nColumn names: {list(df)}"
+          f"\nNumber of NaNs: {df.isna().sum().sum()}"
+          f"\nUnique dtypes: {list(df.dtypes.unique())}"
+          f"\nMemory: {df.__sizeof__()}")
+
+
+def df_to_array(df, index, values, default_values=np.nan):
     """
     Converts pandas dataframe into N-dimensional arrays stored in a dictionary.
     Column name as key for 'values' specified and 'dims' as key for 'index' specified.
@@ -33,7 +50,7 @@ def df_to_ndarry(df, index, values, default_values=np.nan):
     -------
     >>> import pandas as pd
     >>> df = pd.DataFrame({"date": ["2020-01-01", "2020-01-02", "2020-01-03"], "col_1": [1, 2, 3], "col_2": [4, 5, 6]})
-    >>> ndarry = df_to_ndarry(df, index=["date"], values=["col_1", "col_2"])
+    >>> ndarry = df_to_array(df, index=["date"], values=["col_1", "col_2"])
     """
     assert np.all(np.in1d(index, df.columns)), f"'index' specified: {index} not in column names: {df.columns}"
     assert np.all(np.in1d(values, df.columns)), f"'values' specified: {values} not in column names: {df.columns}"
@@ -58,9 +75,9 @@ def df_to_ndarry(df, index, values, default_values=np.nan):
         # populate using the values and assign to label (location) in nd-array
         tmp[tuple(midx.labels)] = df[v].values.flat
         # store array results in output dictionary
-        if v == 'dims':
-            print("'dims' detected as key, renaming to '_dims'")
-            out['_dims'] = tmp
+        if v == 'index':
+            print("'dims' detected as key, renaming to '_index'")
+            out['_index'] = tmp
         else:
             out[v] = tmp
 
@@ -69,19 +86,9 @@ def df_to_ndarry(df, index, values, default_values=np.nan):
     for i, n in enumerate(midx.names):
         dim_names[n] = np.array(midx.levels[i])
 
-    out['dims'] = dim_names
+    out['index'] = dim_names
 
     return out
-
-
-def df_summary(df):
-    """Returns summary of a dataframe"""
-    x_axis, y_axis = df.shape
-    df_cols = list(df)
-    df_nan = df.isna().sum().sum()
-    df_dtypes = list(df.dtypes.unique())
-    print(f"\n{'-'*18}\nDataFrame Summary\n{'-'*18}\nNumber of rows: {x_axis}\nNumber of columns: "
-          f"{y_axis}\nColumn names: {df_cols}\nNumber of NaNs: {df_nan}\nUnique dtypes: {df_dtypes}")
 
 
 def concatenate_columns(sep="", *args, _add=True, na_fill=np.nan):

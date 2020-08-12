@@ -60,6 +60,11 @@ def arrange_files(main_dir, misc_folder_name="others"):
         shutil.move(os.path.join(main_dir, misc_file), os.path.join(main_dir, "others"))
 
 
+def list_file_exts(directory, ext):
+    """Returns a list of files of specified extension."""
+    return [os.path.join(directory, x) for x in os.listdir(directory) if x.endswith(ext)]
+
+
 def read_zip(zip_file, file_name):
     """
     Opens contents of zip file without extraction, can be read using pandas if dataframe like.
