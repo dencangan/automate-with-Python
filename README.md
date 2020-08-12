@@ -1,2 +1,2 @@
 # Automation Framework
-Functions/methods used frequently when automating tasks in Python. This generic framework is designed to equip the user with useful prebuilt tools when automating any process.
+The framework is designed to equip the user with pre-built functions/methods to simplify the process of automation with Python.
