@@ -1,7 +1,5 @@
-"""
-File handling type functions.
-TODO Put into class
-"""
+"""File handling type functions."""
+
 import os
 import shutil
 import zipfile
@@ -19,7 +17,7 @@ class Files(object):
         try:
             self.full_path = os.path.join(folder_directory, file_name)
         except TypeError:
-            print("File name not specified.")
+            print("file_name set as None.")
 
     def arrange_files(self, misc_folder_name="others"):
         """
@@ -83,45 +81,27 @@ class Files(object):
         file = zip_extraction.open(file_name)
         return file
 
-    # TODO add folder
-    def check_file_exists(self, files):
-
+    @staticmethod
+    def check_file_exists(files):
         if isinstance(files, list):
             # Testing all directories
             for file in files:
                 assert os.path.exists(file), f"{file} not found"
-
         else:
             assert os.path.exists(files), f"{files} not found"
 
-    def check_last_modified(self, files):
+    @staticmethod
+    def check_last_modified(files):
         for s in files:
             print(f"{s} last modified at {datetime.utcfromtimestamp(int(os.path.getmtime(s))).strftime('%Y%m%d, %H:%S.')}")
 
-    # TODO incorporate move files
-    def copy_file(self, src, des, src_name=None, des_name=None):
-        """
-        Basic copy function
-
-        Parameters
-        ----------
-        src : str
-            Source to file to copy
-        des : str
-            Destination to copy file to
-        src_name : str
-            Specify file name if needed (for loop runs)
-        des_name : str
-            New file name
-        """
-        if src_name is not None:
-            src = os.path.join(src, src_name)
-
-        if des_name is not None:
-            des = os.path.join(des, des_name)
-
-        shutil.copy(src, des)
+    @staticmethod
+    def copy_move(source_dir=None, des_dir=None, is_copy=True):
+        if is_copy:
+            shutil.copy(source_dir, des_dir)
+        else:
+            shutil.move(source_dir, des_dir)
 
 
 if __name__ == '__main__':
-    Files(folder_directory="C:/Users/Dencan Gan/Downloads").arrange_files(misc_folder_name="new_others")
+    k = Files(folder_directory="C:/Users/Dencan Gan/Downloads").list_file_exts(ext="exe")
