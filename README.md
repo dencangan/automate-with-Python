@@ -1,2 +1,2 @@
-# Automation Framework
-The framework is designed to equip the user with pre-built functions/methods to simplify the process of automation with Python.
+# automation with Python
+Repository containing useful tools to equip the user when automating processes with Python.
