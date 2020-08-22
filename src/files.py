@@ -4,6 +4,7 @@ import os
 import shutil
 import zipfile
 import re
+import pandas as pd
 from datetime import datetime
 
 
@@ -91,9 +92,21 @@ class Files(object):
             assert os.path.exists(files), f"{files} not found"
 
     @staticmethod
-    def check_last_modified(files):
-        for s in files:
-            print(f"{s} last modified at {datetime.utcfromtimestamp(int(os.path.getmtime(s))).strftime('%Y%m%d, %H:%S.')}")
+    def check_last_modified(lst_files, date=None):
+
+        if isinstance(lst_files, str):
+            lst_files = [lst_files]
+
+        def get_file_time(f):
+            return datetime.utcfromtimestamp(int(os.path.getmtime(f))).strftime("%Y%m%d")
+
+        if date is None:
+            date = datetime.today().strftime("%Y%m%d")
+        else:
+            date = pd.to_datetime(date).strftime("%Y%m%d")
+
+        for s in lst_files:
+            assert get_file_time(s) == date, f"'{s}' not modified for {date}!"
 
     @staticmethod
     def copy_move(source_dir=None, des_dir=None, is_copy=True):

@@ -5,14 +5,13 @@ import numpy as np
 import re
 import warnings
 import collections
-from src import point_to_file
 
 
 def df_summary(df):
     """
     Returns summary of a dataframe.
-    >>> example = pd.read_csv(point_to_file("example_dataframe.csv"))
-    >>> df_summary(df=example)
+    >>> example_df = pd.DataFrame({"Name": ["John", "Jane", "Mary", "James"], "Age": [23, 24, 22, 25], "Weight": [67.4, 57.5, 55, 74], "Date": [np.datetime64("2020-10-25")] * 4})
+    >>> df_summary(df=example_df)
     """
     x_axis, y_axis = df.shape
     print(f"\n{'-'*18}\nDataframe Summary\n{'-'*18}"
