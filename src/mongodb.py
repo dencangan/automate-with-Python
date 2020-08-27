@@ -17,8 +17,6 @@ mongodb_port = 12345
 arctic_connection = "some arctic connection string"
 
 
-# Database navigation
-# -------------------
 def db_connect(is_arctic=True, lib_name=None):
     """Function to connect to mongodb database, arctic/non_arctic
 
@@ -90,32 +88,29 @@ def db_connect(is_arctic=True, lib_name=None):
         raise TypeError("Specify bool for arctic/non_arctic database")
 
 
-# Symbol (arctic) or Key (non-arctic)
-# ------------------------------------
 def db_keys_and_symbols(is_arctic, lib_name):
     """
     Returns list of keys in collection (arctic/non-arctic database).
 
     Parameters
     ----------
-        is_arctic : bool
-            True for arctic symbols, False for non_arctic keys
-        lib_name : str
-            Library name
+    is_arctic : bool
+        True for arctic symbols, False for non_arctic keys
+    lib_name : str
+        Library name
 
     Returns
     -------
-        keys / symbols : list
-            List of symbols or keys depending on arctic/non-arctic database
+    keys / symbols : list
+        List of symbols or keys depending on arctic/non-arctic database
 
     """
 
     # Non arctic keys
     if is_arctic is False:
-        collection = db_connect(is_arctic=False, lib_name=lib_name)
-
+        cl = db_connect(is_arctic=False, lib_name=lib_name)
         try:
-            docs = collection.find_one()
+            docs = cl.find_one()
             keys = []
             for x in docs:
                 keys.append(x)
@@ -131,124 +126,57 @@ def db_keys_and_symbols(is_arctic, lib_name):
         return symbols
 
 
-# -----------------
-# Arctic functions
-# -----------------
-def db_arctic_library(library=None):
-    """
-    Quick function to return arctic store or list of library names in arctic database.
-
-    Parameter
-    ---------
-        library : str, None
-            If None, returns lists of available library names
-
-    Returns
-    --------
-        arctic store
-
-    """
-
-    store = db_connect(is_arctic=True, lib_name=library)
-
-    if library is None:
-        return store.list_libraries()
-
-    else:
-        return store
-
-
-# ------------------------
-# Arctic helper functions
-# ------------------------
-def db_arctic_initialise(lib_name: str, lib_type: str):
-    """
-    To initialise new arctic library.
-
-    Parameters
-    ----------
-    lib_name
-        Name of the new library to create.
-    lib_type
-        Acceptable types ["VERSION_STORE", "CHUNK_STORE", "TICK_STORE"]
-
-    """
-    arctic_stores = [VERSION_STORE, CHUNK_STORE, TICK_STORE]
-
-    if lib_type not in arctic_stores:
+def db_arctic_new_library(name_library: str, lib_type=VERSION_STORE):
+    """To initialise new arctic library."""
+    if lib_type not in [VERSION_STORE, CHUNK_STORE, TICK_STORE]:
         raise KeyError(f"Library store must be an arctic store type: {VERSION_STORE}, {CHUNK_STORE}, "
                        f"{TICK_STORE}")
-
-    lib = db_connect(is_arctic=True, lib_name=None)
-
-    lib.initialize_library(lib_name, lib_type=lib_type)
-
+    c = db_connect(is_arctic=True, lib_name=None)
+    c.initialize_library(library=name_library, lib_type=lib_type)
     # This is important because arctic will not show the existing libraries upon creation of a new library.
-    Arctic.reload_cache(lib)
+    Arctic.reload_cache(c)
 
 
-def db_arctic_write(df, symbol, lib_name=None):
+def db_arctic_delete_library(name_library: str):
+    """To delete existing arctic library."""
+    c = db_connect(is_arctic=True, lib_name=None)
+    confirm = input(f"Are you sure you want to delete arctic library {name_library}? (Y/N)")
+    if confirm == "Y":
+        print(f"Deleting library: '{name_library}'")
+        c.delete_library(library=name_library)
+        Arctic.reload_cache(c)
+        print(f"'{name_library}' deleted.")
+    else:
+        print(f"Not deleting library: '{name_library}'.")
+
+
+def db_arctic_amend(lib_name: str, df: pd.DataFrame, symbol: str, append: bool) -> None:
     """
-    Writing to existing arctic library.
+    Make changes to an arctic library.
 
     Parameters
     ----------
-        df : df
-            Dataframe to write into library
-        symbol : str
-            Name of symbol
-        lib_name : str
-            Name of arctic library to write on
-
-    """
-
-    assert lib_name is not None, "lib_name must be passed in to specify library to write."
-
-    lib = db_connect(is_arctic=True, lib_name=lib_name)
-    lib.write(symbol, df)
-
-
-def db_arctic_append(df, symbol, lib_name=None):
-    """
-    Appending existing arctic library.
-
-    Parameters
-    ----------
-        df : pd.DataFrame
-        symbol : str
-            Name of symbol
-        lib_name : str
-            Name of arctic library to append on
-
-    """
-
-    assert lib_name is not None, "lib_name must be passed in to specify library to append."
-    lib = db_connect(is_arctic=True, lib_name=lib_name)
-    lib.append(symbol, df, upsert=True)
-
-
-# --------------------
-# Non_arctic functions
-# --------------------
-def db_non_arctic_library(lib_name: str = None):
-    """
-    Return pymongo collection or list of collection names in non_arctic database.
-
-    Parameters
-    ----------
-    lib_name
-        If None, returns list of available collection names
+    lib_name : str
+        Name of arctic library to amend.
+    df : pd.DataFrame
+        Pandas dataframe to store in library.
+    symbol : str
+        Specify symbol for arctic library.
+    append : bool
+        True to *append* to library with existing symbol, False to *write* to library with new symbol.
 
     Returns
-    --------
-    Collection
+    -------
+    None
     """
-    cl = db_connect(is_arctic=False, lib_name=lib_name)
 
-    if lib_name is None:
-        return cl.list_collection_names()
+    lib = db_connect(is_arctic=True, lib_name=lib_name)
+    if append:
+        print(f"Appending {lib_name} library to symbol {symbol}.")
+        lib.append(symbol, df, upsert=True)
     else:
-        return cl
+        print(f"Writing {lib_name} library. Created new symbol {symbol}.")
+        lib.write(symbol, df)
 
 
 def db_non_arctic_read(lib_name: str, no_id: bool = True) -> pd.DataFrame:
