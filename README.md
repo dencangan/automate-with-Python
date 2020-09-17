@@ -1,7 +1,13 @@
 # automation with Python
 Repository containing useful tools to equip the user when automating processes with Python.
+<p align="center">
+  <br>
+  <img src="img/automation-robot.png">
+  <br>
+  <i>Why automation is important.</i>
+</p>
 
-## Module Breakdown
+## Module Breakdowns
 Below you will find a short summary of each module and its specific use case.
 
 ### mongodb.py
