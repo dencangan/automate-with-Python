@@ -1,20 +1,19 @@
 """
-Generic MongoDB set up architecture.
-
+MongoDB functions using PyMongo and Arctic library.
 """
 
 from pymongo import MongoClient
 from pymongo.errors import ServerSelectionTimeoutError
-from arctic import Arctic
-from arctic import VERSION_STORE
-from arctic import CHUNK_STORE
-from arctic import TICK_STORE
+from arctic import Arctic, VERSION_STORE, CHUNK_STORE, TICK_STORE
 import pandas as pd
+from json import load
 
-# This can be hidden in an encrypted file
-mongodb_host = "mongo host details"
-mongodb_port = 12345
-arctic_connection = "some arctic connection string"
+# Location to jsonified credentials
+credentials = load(open(r""))
+MONGO_USER = credentials["personal_db"]["username"]
+MONGO_PASSWORD = credentials["personal_db"]["password"]
+MONGO_DB_NAME = "personal"
+MONGO_CONNECTION = f"mongodb+srv://{MONGO_USER}:{MONGO_PASSWORD}@cluster0.m7iwb.azure.mongodb.net/{MONGO_DB_NAME}?retryWrites=true&w=majority"
 
 
 def db_connect(is_arctic=True, lib_name=None):
@@ -43,7 +42,7 @@ def db_connect(is_arctic=True, lib_name=None):
         https://arctic.readthedocs.io/en/latest/
     """
 
-    client = MongoClient(mongodb_host, mongodb_port)
+    client = MongoClient(MONGO_CONNECTION)
 
     # Check connection to mongodb
     try:
@@ -53,7 +52,7 @@ def db_connect(is_arctic=True, lib_name=None):
 
     # 'arctic' connection
     if is_arctic is True:
-        db_connection = Arctic(arctic_connection)
+        db_connection = Arctic(MONGO_CONNECTION)
         lib_lst = db_connection.list_libraries()
 
         if lib_name is not None:
@@ -103,7 +102,6 @@ def db_keys_and_symbols(is_arctic, lib_name):
     -------
     keys / symbols : list
         List of symbols or keys depending on arctic/non-arctic database
-
     """
 
     # Non arctic keys
