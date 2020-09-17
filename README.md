@@ -1,4 +1,4 @@
-# automation with Python
+# automate with Python
 Repository containing useful tools to equip the user when automating processes with Python.
 <p align="center">
   <br>
