@@ -21,7 +21,7 @@ from email.mime.base import MIMEBase
 from email.mime.image import MIMEImage
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-from src import point_to_file
+from automation import point_to_file
 
 
 def read_double_zip(zip_dir, zip_file_one, file_name):
